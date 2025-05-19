@@ -1,12 +1,11 @@
 name: Build and Push Docker Image
-
 on:
-  # Триггер при пуше в указанные ветки
+
   push:
     branches:
       - main
       - feature/*
-  # Триггер для ручного запуска
+
   workflow_dispatch:
 
 jobs:
@@ -17,18 +16,16 @@ jobs:
       packages: write
     
     steps:
-      # Клонування репозиторію с налаштуваннями за замовчуванням
+
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      # Встановлення pnpm, залежностей та збірка в одном скрипті
+
       - name: Install and Build using pnpm
         run: |
           npm install -g pnpm
           pnpm install
           pnpm run build
-      
-      # Авторизація в GitHub Container Registry
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -36,20 +33,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      # Збірка і пуш Docker-образу
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/gamechl/lb-pr-front-end-8:latest
-      - uses: azure/login@v2
-        with:
-           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-         app-name: myapp-lb9
-         images: ghcr.io/gamechl/lb-pr-front-end-8:latest
-
-           
+          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
