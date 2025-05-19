@@ -1,33 +1,34 @@
 name: Build and Push Docker Image
 
 on:
+  # Триггер при пуше в указанные ветки
   push:
     branches:
       - main
-      - feature/* 
+      - feature/*
+  # Триггер для ручного запуска
   workflow_dispatch:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read    
-      packages: write  
+      contents: read
+      packages: write
     
     steps:
+      # Клонування репозиторію с налаштуваннями за замовчуванням
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3 
-        with:
-          version: 8 
-
-      - name: Install dependencies and Build
+      
+      # Встановлення pnpm, залежностей та збірка в одном скрипті
+      - name: Install and Build using pnpm
         run: |
+          npm install -g pnpm
           pnpm install
           pnpm run build
-
+      
+      # Авторизація в GitHub Container Registry
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -35,21 +36,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
+      # Збірка і пуш Docker-образу
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/lb-pr-front-end-8:latest 
-
-
-      - name: Azure Login
-        uses: azure/login@v2 
+          tags: ghcr.io/GAMECHl/lb-pr-front-end-8:latest
+      - uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: myapp-lb9
-          images: ghcr.io/${{ github.repository_owner }}/lb-pr-front-end-8:latest 
+         app-name: myapp-lb9
+         images: ghcr.io/GAMECHl/lb-pr-front-end-8:latest
+
+           
