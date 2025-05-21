@@ -1,11 +1,10 @@
 name: Build and Push Docker Image
-on:
 
+on:
   push:
     branches:
       - main
       - feature/*
-
   workflow_dispatch:
 
 jobs:
@@ -16,10 +15,8 @@ jobs:
       packages: write
     
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Install and Build using pnpm
         run: |
           npm install -g pnpm
@@ -32,10 +29,20 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/gamechl/${{ github.event.repository.name }}:latest
+          tags: ghcr.io/gamechl/lb-pr-front-end-8:latest
+      - uses: azure/login@v2
+        with:
+           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+         app-name: pr-lb-9
+         images: ghcr.io/gamechl/lb-pr-front-end-8:latest
+
+           
